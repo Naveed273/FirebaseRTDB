@@ -28,6 +28,7 @@ export default function App() {
     setisLoading(true);
     try {
       const auth = getAuth();
+      //for lock RTDB
       await signInAnonymously(auth);
       const db = getDatabase();
       const reference = ref(db, 'users/' + userId);
@@ -38,9 +39,7 @@ export default function App() {
       Alert.alert('Congratulations', 'data successfull inserted');
     } catch (error) {
       setisLoading(false);
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      Alert.alert(errorCode, errorMessage);
+      Alert.alert(error.code, error.message);
     }
   };
   const setupHighscoreListener = (userId) => {
