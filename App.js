@@ -9,23 +9,26 @@ import {
 } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 export default function App() {
   const [isLoading, setisLoading] = useState(false);
   const firebaseConfig = {
-    apiKey: 'AIzaSyBEkzoKX22XMwOEwkve84-bONnvrnoJlaU',
-    authDomain: 'bugsnag-testing.firebaseapp.com',
+    apiKey: 'AIzaSyAZtBQ0mVRBpYlEHsFq72SY67hMUfXyIyU',
+    authDomain: 'reactnativefirebase-81219.firebaseapp.com',
     databaseURL:
-      'https://bugsnag-testing-default-rtdb.asia-southeast1.firebasedatabase.app',
-    projectId: 'bugsnag-testing',
-    storageBucket: 'bugsnag-testing.appspot.com',
-    messagingSenderId: '347729835498',
-    appId: '1:347729835498:web:ff0a47c95115ddac5cae93',
+      'https://reactnativefirebase-81219-default-rtdb.firebaseio.com',
+    projectId: 'reactnativefirebase-81219',
+    storageBucket: 'reactnativefirebase-81219.appspot.com',
+    messagingSenderId: '907511338088',
+    appId: '1:907511338088:web:09cc29853cf821c9e157dd',
   };
   initializeApp(firebaseConfig);
   const storeHighScore = async (userId, score) => {
     setisLoading(true);
     try {
+      const auth = getAuth();
+      await signInAnonymously(auth);
       const db = getDatabase();
       const reference = ref(db, 'users/' + userId);
       await set(reference, {
@@ -33,9 +36,11 @@ export default function App() {
       });
       setisLoading(false);
       Alert.alert('Congratulations', 'data successfull inserted');
-    } catch (e) {
+    } catch (error) {
       setisLoading(false);
-      Alert.alert('Sorry', e);
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      Alert.alert(errorCode, errorMessage);
     }
   };
   const setupHighscoreListener = (userId) => {
