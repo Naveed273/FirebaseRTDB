@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
-import { getAuth, signInAnonymously } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
   const [isLoading, setisLoading] = useState(false);
+
   const firebaseConfig = {
     apiKey: 'AIzaSyAZtBQ0mVRBpYlEHsFq72SY67hMUfXyIyU',
     authDomain: 'reactnativefirebase-81219.firebaseapp.com',
@@ -25,35 +26,67 @@ export default function App() {
   };
   initializeApp(firebaseConfig);
   const storeHighScore = async (userId, score) => {
+    const auth = getAuth();
     setisLoading(true);
-    try {
-      const auth = getAuth();
-      //for lock RTDB
-      await signInAnonymously(auth);
-      const db = getDatabase();
-      const reference = ref(db, 'users/' + userId);
-      await set(reference, {
-        highscore: score,
+
+    signInAnonymously(auth)
+      .then(() => {
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            const uid = user.uid;
+            const db = getDatabase();
+            const reference = ref(db, 'users/' + uid);
+            setisLoading(false);
+            set(reference, {
+              highscore: score,
+            })
+              .then(() => {
+                Alert.alert('Congratulations', 'data successfull inserted');
+              })
+              .catch((e) => {
+                Alert.alert('Failed', e.message);
+              });
+          } else {
+            Alert.alert('Failed');
+            setisLoading(false);
+          }
+        });
+      })
+      .catch((error) => {
+        setisLoading(false);
+        Alert.alert(error.code, error.message);
       });
-      setisLoading(false);
-      Alert.alert('Congratulations', 'data successfull inserted');
-    } catch (error) {
-      setisLoading(false);
-      Alert.alert(error.code, error.message);
-    }
   };
   const setupHighscoreListener = (userId) => {
-    try {
-      const db = getDatabase();
-      const reference = ref(db, 'users/' + userId);
-      onValue(reference, (snapshot) => {
-        const highscore = snapshot.val().highscore;
+    const auth = getAuth();
+    setisLoading(true);
+    signInAnonymously(auth)
+      .then(() => {
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            const uid = user.uid;
+            const db = getDatabase();
+            setisLoading(false);
+            const reference = ref(db, `users/${uid}`);
+            onValue(
+              reference,
+              (snapshot) => {
+                const highscore = snapshot.val().highscore;
 
-        Alert.alert(userId, `New high score of ${userId} is ${highscore}`);
+                Alert.alert(uid, `New high score of ${uid} is ${highscore}`);
+              },
+              (e) => Alert.alert('Failed', e.message)
+            );
+          } else {
+            Alert.alert('Failed', 'Faild to fetch data');
+            setisLoading(false);
+          }
+        });
+      })
+      .catch((error) => {
+        setisLoading(false);
+        Alert.alert(error.code, error.message);
       });
-    } catch (e) {
-      Alert.alert('Sorry', e);
-    }
   };
   return (
     <View style={styles.container}>
