@@ -13,6 +13,7 @@ import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
   const [isLoading, setisLoading] = useState(false);
+  const [score, setScore] = useState(100);
 
   const firebaseConfig = {
     apiKey: 'AIzaSyAZtBQ0mVRBpYlEHsFq72SY67hMUfXyIyU',
@@ -25,7 +26,7 @@ export default function App() {
     appId: '1:907511338088:web:09cc29853cf821c9e157dd',
   };
   initializeApp(firebaseConfig);
-  const storeHighScore = async (userId, score) => {
+  const storeHighScore = async (score) => {
     const auth = getAuth();
     setisLoading(true);
 
@@ -38,7 +39,7 @@ export default function App() {
             const reference = ref(db, 'users/' + uid);
             setisLoading(false);
             set(reference, {
-              highscore: score,
+              highscore: score + 100,
             })
               .then(() => {
                 Alert.alert('Congratulations', 'data successfull inserted');
@@ -57,7 +58,7 @@ export default function App() {
         Alert.alert(error.code, error.message);
       });
   };
-  const setupHighscoreListener = (userId) => {
+  const setupHighscoreListener = () => {
     const auth = getAuth();
     setisLoading(true);
     signInAnonymously(auth)
@@ -72,8 +73,9 @@ export default function App() {
               reference,
               (snapshot) => {
                 const highscore = snapshot.val().highscore;
+                setScore(highscore);
 
-                Alert.alert(uid, `New high score of ${uid} is ${highscore}`);
+                // Alert.alert(uid, `New high score of ${uid} is ${highscore}`);
               },
               (e) => Alert.alert('Failed', e.message)
             );
@@ -93,17 +95,18 @@ export default function App() {
       <View style={styles.buttonView}>
         {isLoading && <ActivityIndicator size="large" />}
         <Button
-          onPress={() => storeHighScore('naveedInfosun', 600)}
+          onPress={() => storeHighScore(score)}
           title="Add data to RTDB"
           color={'#007AFF'}
         />
       </View>
       <View style={styles.buttonView}>
         <Button
-          onPress={() => setupHighscoreListener('naveedInfosun')}
+          onPress={() => setupHighscoreListener()}
           title="Check user high score"
         />
       </View>
+      <Text>high score is {score} </Text>
     </View>
   );
 }
